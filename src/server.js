@@ -3,7 +3,7 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 
 const marmiton = require('./connectors/marmiton');
-const ricard = require('./connectors/ricardo');
+const ricardo = require('./connectors/ricardo');
 const chacuit = require('./connectors/chacuit');
 
 
@@ -151,11 +151,11 @@ app.post("/comments", async function (request, response) {
 async function parseAndAddRecipes() {
   console.log('Parsing and adding recipes');
   const params = process.argv.slice(2);
-  const marmitonSearchResults = await marmiton.search(params);
-  console.log(`Found ${marmitonSearchResults.length} results`);
-  if (marmitonSearchResults.length > 0) {
-    const marmitonRecipe = await marmiton.getRecipe(marmitonSearchResults[0]);
-    console.log(marmitonRecipe);
+  const ricardoSearchResults = await ricardo.search(params);
+  console.log(`Found ${ricardoSearchResults.length} results`);
+  if (ricardoSearchResults.length > 0) {
+    const ricardoRecipe = await ricardo.getRecipe(ricardoSearchResults[0]);
+    console.log(ricardoRecipe);
   }
 }
 
