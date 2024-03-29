@@ -1,4 +1,11 @@
 const cron = require('node-cron');
+const axios = require('axios');
+const cheerio = require('cheerio');
+
+const marmiton = require('./connectors/marmiton');
+const ricard = require('./connectors/ricardo');
+const chacuit = require('./connectors/chacuit');
+
 
 require("dotenv").config()
 const express = require("express")
@@ -142,9 +149,14 @@ app.post("/comments", async function (request, response) {
 
 // Create a function that will parse recipes and add them to your Notion database
 async function parseAndAddRecipes() {
-  console.log("Parsing recipes...")
-  // Your code to parse recipes from various websites goes here
-  // Call the necessary functions from your server to add the parsed recipes to your Notion database
+  console.log('Parsing and adding recipes');
+  const params = process.argv.slice(2);
+  const marmitonSearchResults = await marmiton.search(params);
+  console.log(`Found ${marmitonSearchResults.length} results`);
+  if (marmitonSearchResults.length > 0) {
+    const marmitonRecipe = await marmiton.getRecipe(marmitonSearchResults[0]);
+    console.log(marmitonRecipe);
+  }
 }
 
 // Schedule this function to run every hour using node-cron
