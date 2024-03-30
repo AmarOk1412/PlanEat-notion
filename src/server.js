@@ -160,7 +160,69 @@ async function parseAndAddRecipes() {
 }
 
 // Schedule this function to run every hour using node-cron
-cron.schedule('* * * * *', parseAndAddRecipes);
+//cron.schedule('* * * * *', parseAndAddRecipes);
+//chacuit.search('poulet');
+
+setInitialTaskPageIdToStatusMap().then(() => {
+  setInterval(findAndSendEmailsForUpdatedTasks, 5000)
+})
+
+/**
+ * Get and set the initial data store with tasks currently in the database.
+ */
+async function setInitialTaskPageIdToStatusMap() {
+  const currentTasks = await getTasksFromNotionDatabase()
+  for (const { pageId, status } of currentTasks) {
+    taskPageIdToStatusMap[pageId] = status
+  }
+}
+
+async function findAndSendEmailsForUpdatedTasks() {
+  // Get the tasks currently in the database.
+  console.log("\nFetching tasks from Notion DB...")
+  const currentTasks = await getTasksFromNotionDatabase()
+}
+
+/**
+ * Gets tasks from the database.
+ */
+async function getTasksFromNotionDatabase() {
+  const pages = []
+  let cursor = undefined
+
+  const shouldContinue = true
+  while (shouldContinue) {
+    const { results, next_cursor } = await notion.databases.query({
+      database_id: process.env.NOTION_DATABASE_ID,
+      start_cursor: cursor,
+    })
+    pages.push(...results)
+    if (!next_cursor) {
+      break
+    }
+    cursor = next_cursor
+  }
+  console.log(`${pages.length} pages successfully fetched.`)
+
+  const tasks = []
+  for (const page of pages) {
+    const pageId = page.id
+
+    const titlePropertyId = page.properties["Name"].id
+
+   console.warn(page.properties["Name"].title[0].plain_text)
+  }
+
+  return tasks
+}
+
+// TODO DELETE DB (DELETE /blocks)
+
+// TODO create new block, save the id.
+// Fetch every 5 seconds the block, if the content has changed, perform a search
+// If the search returns a result, add the result to the block
+    // If url is present, fetch the recipe and add the recipe to the block
+    // If title, search on cha-cu.it, then ricardo, then marmiton, then add the first result to the block
 
 // listen for requests :)
 const listener = app.listen(process.env.PORT, function () {
