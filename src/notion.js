@@ -1,0 +1,219 @@
+const express = require("express")
+const app = express()
+
+const { Client } = require("@notionhq/client")
+const { getDatabase } = require("@notionhq/client/build/src/api-endpoints")
+const notion = new Client({ auth: process.env.NOTION_KEY })
+
+// http://expressjs.com/en/starter/static-files.html
+app.use(express.static("public"))
+app.use(express.json()) // for parsing application/json
+
+// http://expressjs.com/en/starter/basic-routing.html
+app.get("/", function (request, response) {
+  response.sendFile(__dirname + "/views/index.html")
+})
+
+exports.databases = function() {
+    return notion.databases
+}
+
+exports.newDatabase = async function(pageId, title, properties) {
+    try {
+      const newDb = await notion.databases.create({
+        parent: {
+          type: "page_id",
+          page_id: pageId,
+        },
+        title: [
+          {
+            type: "text",
+            text: {
+              content: title,
+            },
+          },
+        ],
+        properties: properties
+      })
+      return newDb
+    } catch (error) {
+        console.warning(error)
+    }
+    return null
+}
+
+exports.updatePage = async function(pageId, properties) {
+    try {
+        await notion.pages.update({
+            page_id: pageId,
+            properties: properties
+        })
+    } catch (error) {
+        console.warning(error)
+    }
+}
+
+exports.newPage = async function(databaseId, pageName) {
+    try {
+        const newPage = await notion.pages.create({
+          parent: {
+            type: "database_id",
+            database_id: databaseId,
+          },
+          properties: {
+            Name: {
+              title: [
+                {
+                  text: {
+                    content: pageName,
+                  },
+                },
+              ],
+            },
+          },
+          children: [
+            {
+              object: "block",
+              heading_2: {
+                rich_text: [
+                  {
+                    text: {
+                      content: pageName,
+                    },
+                  },
+                ],
+              },
+            },
+          ],
+        })
+        return newPage
+    } catch (error) {
+        console.warning(error)
+    }
+
+    return null
+}
+
+// Create new database. The page ID is set in the environment variables.
+app.post("/databases", async function (request, response) {
+  const pageId = process.env.NOTION_PAGE_ID
+  const title = request.body.dbName
+
+  try {
+    const newDb = await notion.databases.create({
+      parent: {
+        type: "page_id",
+        page_id: pageId,
+      },
+      title: [
+        {
+          type: "text",
+          text: {
+            content: title,
+          },
+        },
+      ],
+      properties: {
+        Name: {
+          title: {},
+        },
+      },
+    })
+    response.json({ message: "success!", data: newDb })
+  } catch (error) {
+    response.json({ message: "error", error })
+  }
+})
+
+// Create new page. The database ID is provided in the web form.
+app.post("/pages", async function (request, response) {
+  const { dbID, pageName, header } = request.body
+
+  try {
+    const newPage = await notion.pages.create({
+      parent: {
+        type: "database_id",
+        database_id: dbID,
+      },
+      properties: {
+        Name: {
+          title: [
+            {
+              text: {
+                content: pageName,
+              },
+            },
+          ],
+        },
+      },
+      children: [
+        {
+          object: "block",
+          heading_2: {
+            rich_text: [
+              {
+                text: {
+                  content: header,
+                },
+              },
+            ],
+          },
+        },
+      ],
+    })
+    response.json({ message: "success!", data: newPage })
+  } catch (error) {
+    response.json({ message: "error", error })
+  }
+})
+
+// Create new block (page content). The page ID is provided in the web form.
+app.post("/blocks", async function (request, response) {
+  const { pageID, content } = request.body
+
+  try {
+    const newBlock = await notion.blocks.children.append({
+      block_id: pageID, // a block ID can be a page ID
+      children: [
+        {
+          // Use a paragraph as a default but the form or request can be updated to allow for other block types: https://developers.notion.com/reference/block#keys
+          paragraph: {
+            rich_text: [
+              {
+                text: {
+                  content: content,
+                },
+              },
+            ],
+          },
+        },
+      ],
+    })
+    response.json({ message: "success!", data: newBlock })
+  } catch (error) {
+    response.json({ message: "error", error })
+  }
+})
+
+// Create new page comments. The page ID is provided in the web form.
+app.post("/comments", async function (request, response) {
+  const { pageID, comment } = request.body
+
+  try {
+    const newComment = await notion.comments.create({
+      parent: {
+        page_id: pageID,
+      },
+      rich_text: [
+        {
+          text: {
+            content: comment,
+          },
+        },
+      ],
+    })
+    response.json({ message: "success!", data: newComment })
+  } catch (error) {
+    response.json({ message: "error", error })
+  }
+})

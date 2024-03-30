@@ -85,8 +85,7 @@ exports.getRecipe = async function(recipe) {
                 tags = recipeData.recipeCategory.split(', ');
             }
 
-            const durationInMinutes = parseInt(recipeData.totalTime.replace(/\D/g, ''));
-            const duration = `${durationInMinutes} min`;
+            const duration = parseInt(recipeData.totalTime.replace(/\D/g, ''));
             const ingredients = recipeData.recipeIngredient;
             const steps = recipeData.recipeInstructions[0].itemListElement.map(instruction => instruction.text);
 
