@@ -192,14 +192,14 @@ class PlanEat {
                 marmiton.search(title).then((recipes)=>{
                     if (recipes.length > 0) {
                         marmiton.getRecipe(recipes[0]).then((recipe) => {
-                            notion.updatePage(page.id, this.recipeToPage(recipe))
+                            notion.updatePage(page.id, recipe.imageUrl, this.recipeToPage(recipe))
                         })
                     }
                 })
             } else if (source && title.length === 0) {
                 console.log(`Parsing ${source}`)
                 marmiton.getRecipe({url: source}).then((recipe)=> {
-                    notion.updatePage(page.id, this.recipeToPage(recipe))
+                    notion.updatePage(page.id, recipe.imageUrl, this.recipeToPage(recipe))
                 })
             }
         }

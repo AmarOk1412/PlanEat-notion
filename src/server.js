@@ -3,6 +3,7 @@ const axios = require('axios');
 const cheerio = require('cheerio');
 
 const ricardo = require('./connectors/ricardo');
+const marmiton = require('./connectors/marmiton');
 const chacuit = require('./connectors/chacuit');
 
 require("dotenv").config()

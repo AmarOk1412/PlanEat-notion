@@ -87,9 +87,10 @@ exports.getRecipe = async function(recipe) {
 
             const duration = parseInt(recipeData.totalTime.replace(/\D/g, ''));
             const ingredients = recipeData.recipeIngredient;
+            const imageUrl = recipeData.image[0]
             const steps = recipeData.recipeInstructions[0].itemListElement.map(instruction => instruction.text);
 
-            recipe = { ...recipe, name, tags, duration, ingredients, steps };
+            recipe = { ...recipe, name, imageUrl, tags, duration, ingredients, steps };
         }
 
     } catch (error) {

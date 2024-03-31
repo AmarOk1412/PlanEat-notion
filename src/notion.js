@@ -42,11 +42,17 @@ exports.newDatabase = async function(pageId, title, properties) {
     return null
 }
 
-exports.updatePage = async function(pageId, properties) {
+exports.updatePage = async function(pageId, imageUrl, properties) {
     try {
         await notion.pages.update({
             page_id: pageId,
-            properties: properties
+            properties: properties,
+            cover: {
+                type: "external",
+                external: {
+                    url: imageUrl
+                }
+            }
         })
     } catch (error) {
         console.warning(error)
