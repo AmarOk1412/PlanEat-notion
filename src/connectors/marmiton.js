@@ -1,6 +1,10 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 
+exports.handleUrl = function(url) {
+    return url.includes('marmiton.org');
+}
+
 exports.search = async function(searchTerm) {
     const recipes = [];
     try {

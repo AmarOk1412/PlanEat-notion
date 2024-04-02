@@ -37,7 +37,7 @@ exports.newDatabase = async function(pageId, title, properties) {
       })
       return newDb
     } catch (error) {
-        console.warning(error)
+        console.warn(error)
     }
     return null
 }
@@ -55,7 +55,7 @@ exports.updatePage = async function(pageId, imageUrl, properties) {
             }
         })
     } catch (error) {
-        console.warning(error)
+        console.warn(error)
     }
 }
 
@@ -94,7 +94,7 @@ exports.newPage = async function(databaseId, pageName) {
         })
         return newPage
     } catch (error) {
-        console.warning(error)
+        console.warn(error)
     }
 
     return null

@@ -1,7 +1,9 @@
 const fs = require('fs');
 const path = require('path');
 const notion = require('./notion')
+const chacuit = require('./connectors/chacuit');
 const marmiton = require('./connectors/marmiton');
+const ricardo = require('./connectors/ricardo');
 
 class PlanEat {
 
@@ -19,7 +21,7 @@ class PlanEat {
                 this.data = JSON.parse(fs.readFileSync(filePath, 'utf8'));
                 return
             } catch (error) {
-                console.warning(error)
+                console.warn(error)
             }
         }
         // Create data directory if it doesn't exist
@@ -28,9 +30,7 @@ class PlanEat {
             fs.mkdirSync(dataDir);
         }
         this.createRecipeDb().then(()=>{
-            //this.createRecipePage().then(()=> {
-                fs.writeFileSync(filePath, JSON.stringify(this.data));
-            //});
+            fs.writeFileSync(filePath, JSON.stringify(this.data));
         });
     }
 
@@ -124,7 +124,7 @@ class PlanEat {
                 title: [{
                     type: "text",
                     text: {
-                        content: recipe.title,
+                        content: recipe.name,
                     }
                 }]
             },
@@ -189,18 +189,52 @@ class PlanEat {
             const source = page.properties["Source"].url
             if (!source && title.length > 0) {
                 console.log(`Finding best recipe for ${title}`)
-                marmiton.search(title).then((recipes)=>{
+                let stop = false
+                chacuit.search(title).then((recipes, stop)=>{
                     if (recipes.length > 0) {
-                        marmiton.getRecipe(recipes[0]).then((recipe) => {
-                            notion.updatePage(page.id, recipe.imageUrl, this.recipeToPage(recipe))
+                        chacuit.getRecipe(recipes[0]).then((recipe, stop) => {
+                            if (!stop) {
+                                stop = true
+                                notion.updatePage(page.id, recipe.imageUrl, this.recipeToPage(recipe))
+                            }
+                        })
+                    }
+                })
+                marmiton.search(title).then((recipes, stop)=>{
+                    if (recipes.length > 0) {
+                        marmiton.getRecipe(recipes[0]).then((recipe, stop) => {
+                            if (!stop) {
+                                stop = true
+                                notion.updatePage(page.id, recipe.imageUrl, this.recipeToPage(recipe))
+                            }
+                        })
+                    }
+                })
+                ricardo.search(title).then((recipes, stop)=>{
+                    if (recipes.length > 0) {
+                        ricardo.getRecipe(recipes[0]).then((recipe, stop) => {
+                            if (!stop) {
+                                stop = true
+                                notion.updatePage(page.id, recipe.imageUrl, this.recipeToPage(recipe))
+                            }
                         })
                     }
                 })
             } else if (source && title.length === 0) {
                 console.log(`Parsing ${source}`)
-                marmiton.getRecipe({url: source}).then((recipe)=> {
-                    notion.updatePage(page.id, recipe.imageUrl, this.recipeToPage(recipe))
-                })
+                if (chacuit.handleUrl(source)) {
+                    chacuit.getRecipe({url: source}).then((recipe)=> {
+                        notion.updatePage(page.id, recipe.imageUrl, this.recipeToPage(recipe))
+                    })
+                } else if (marmiton.handleUrl(source)) {
+                    marmiton.getRecipe({url: source}).then((recipe)=> {
+                        notion.updatePage(page.id, recipe.imageUrl, this.recipeToPage(recipe))
+                    })
+                } else if (ricardo.handleUrl(source)) {
+                    ricardo.getRecipe({url: source}).then((recipe)=> {
+                        notion.updatePage(page.id, recipe.imageUrl, this.recipeToPage(recipe))
+                    })
+                }
             }
         }
 

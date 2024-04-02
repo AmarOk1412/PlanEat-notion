@@ -1,6 +1,10 @@
 const axios = require('axios');
 const cheerio = require('cheerio');
 
+exports.handleUrl = function(url) {
+    return url.includes('ricardocuisine.com');
+}
+
 getRouteProps = function(scriptContent) {
     let startPos = scriptContent.indexOf('routeProps:') + 'routeProps:'.length;
     let braceStack = [];
@@ -86,9 +90,9 @@ exports.getRecipe = async function(recipe) {
             }
 
             const duration = parseInt(recipeData.totalTime.replace(/\D/g, ''));
-            const ingredients = recipeData.recipeIngredient;
+            const ingredients = recipeData.recipeIngredient ? recipeData.recipeIngredient : "";
             const imageUrl = recipeData.image[0]
-            const steps = recipeData.recipeInstructions[0].itemListElement.map(instruction => instruction.text);
+            const steps = recipeData.recipeInstructions ? recipeData.recipeInstructions[0].itemListElement.map(instruction => instruction.text) : "";
 
             recipe = { ...recipe, name, imageUrl, tags, duration, ingredients, steps };
         }
